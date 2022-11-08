@@ -16,11 +16,11 @@ async function run(){
     try{
         const productsCollection = client.db('grocery').collection('products');
         const reviewsCollection = client.db('grocery').collection('reviews')
+        const addServicesCollection = client.db('grocery').collection('addservices')
         app.get('/homeproducts', async(req,res)=>{
             const query = {}
             const cursor = productsCollection.find(query);
             const products = await cursor.limit(3).toArray();
-            console.log(products)
             res.send(products)
         })
         app.get('/services', async(req,res)=>{
@@ -45,16 +45,13 @@ async function run(){
         })
         app.get('/myreviews', async(req,res)=>{
             const email = req.query.email;
-            console.log(email)
             const query = {email : email}
             const cursor = reviewsCollection.find(query);
-            const reviews = await cursor.toArray()
-            console.log(reviews)
+            const reviews = await cursor.toArray();
             res.send(reviews)
         })
         app.delete('/reviewdelete/:id', async(req,res)=>{
             const id = req.params.id;
-            console.log(id)
             const query = {_id : ObjectId(id)}
             const result = await reviewsCollection.deleteOne(query);
             res.send(result)
@@ -62,6 +59,18 @@ async function run(){
         app.post('/reviews', async(req,res)=>{
             const review = req.body
             const result = await reviewsCollection.insertOne(review)
+            res.send(result)
+        })
+        app.get('/addservices', async(req,res)=>{
+            const query = {}
+            const cursor = addServicesCollection.find(query);
+            const addServices = await cursor.toArray()
+            res.send(addServices)
+        })
+        app.post('/addservices', async(req,res)=>{
+            const review = req.body;
+            const result = await addServicesCollection.insertOne(review);
+            console.log(result)
             res.send(result)
         })
     }
