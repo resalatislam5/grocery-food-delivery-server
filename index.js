@@ -98,9 +98,12 @@ async function run(){
             const result = await reviewsCollection.insertOne(review)
             res.send(result)
         })
-        app.get('/addservices', async(req,res)=>{
+        app.get('/addservices',verifyToken, async(req,res)=>{
+            const decoded = req.decoded;
+            if(decoded?.email !== req?.query?.email){
+                res.status(403).send({massage : 'unauthorize access'})
+            }
             const email = req.query.email
-            console.log(email)
             const query = {email : email}
             const cursor = addServicesCollection.find(query);
             const addServices = await cursor.toArray()
