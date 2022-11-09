@@ -99,7 +99,9 @@ async function run(){
             res.send(result)
         })
         app.get('/addservices', async(req,res)=>{
-            const query = {}
+            const email = req.query.email
+            console.log(email)
+            const query = {email : email}
             const cursor = addServicesCollection.find(query);
             const addServices = await cursor.toArray()
             res.send(addServices)
