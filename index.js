@@ -56,6 +56,19 @@ async function run(){
             const products = await cursor.toArray()
             res.send(products)
         })
+        app.put('/reviewupdate/:id', async(req,res)=>{
+            const id = req.params.id;
+            const filter  = {_id : ObjectId(id)}
+            const reviewed = req.body.update;
+            const options = { upsert: true };
+            const updatedReview = {
+                $set: {
+                    review: reviewed
+                  },
+            }
+            const result = await reviewsCollection.updateOne(filter, updatedReview, options);
+            res.send(result)
+        })
         app.get('/reviews/:id', async(req,res)=>{
             const id = req.params.id;
             const query = {reviewId : id}
