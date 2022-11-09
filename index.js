@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
@@ -11,12 +12,31 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@grover-grocery.gqn8qjj.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-
+function verifyToken (req,res,next){
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+        res.status(401).send({massage: 'unauthorized access'})
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_TOKEN,function(err, decoded){
+        if(err){
+            res.status(401).send({massage: 'unauthorized access'})
+        }
+        req.decoded = decoded;
+    })
+    next()
+}
 async function run(){
     try{
         const productsCollection = client.db('grocery').collection('products');
         const reviewsCollection = client.db('grocery').collection('reviews')
         const addServicesCollection = client.db('grocery').collection('addservices')
+        app.post('/jwt',(req,res)=>{
+            const user = req.body;
+            console.log(user)
+            const token = jwt.sign(user,process.env.JWT_TOKEN,{ expiresIn: '1d' })
+            res.send({token})
+        })
         app.get('/homeproducts', async(req,res)=>{
             const query = {}
             const cursor = productsCollection.find(query);
@@ -43,7 +63,11 @@ async function run(){
             const reviews = await cursor.toArray()
             res.send(reviews)
         })
-        app.get('/myreviews', async(req,res)=>{
+        app.get('/myreviews',verifyToken, async(req,res)=>{
+            const decoded = req.decoded;
+            if(decoded?.email !== req?.query?.email){
+                res.status(403).send({massage : 'unauthorize access'})
+            }
             const email = req.query.email;
             const query = {email : email}
             const cursor = reviewsCollection.find(query);
@@ -57,7 +81,7 @@ async function run(){
             res.send(result)
         })
         app.post('/reviews', async(req,res)=>{
-            const review = req.body
+            const review = req.body;
             const result = await reviewsCollection.insertOne(review)
             res.send(result)
         })
