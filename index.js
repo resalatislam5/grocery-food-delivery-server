@@ -72,7 +72,11 @@ async function run(){
         app.get('/reviews/:id', async(req,res)=>{
             const id = req.params.id;
             const query = {reviewId : id}
-            const cursor = reviewsCollection.find(query);
+            const options = {
+                sort: { date: -1 },
+                sort: { time: -1 }
+              };
+            const cursor = reviewsCollection.find(query,options);
             const reviews = await cursor.toArray()
             res.send(reviews)
         })
@@ -81,9 +85,13 @@ async function run(){
             if(decoded?.email !== req?.query?.email){
                 res.status(403).send({massage : 'unauthorize access'})
             }
+            const options = {
+                sort: { date: -1 },
+                sort: { time: -1 }
+              };
             const email = req.query.email;
             const query = {email : email}
-            const cursor = reviewsCollection.find(query);
+            const cursor = reviewsCollection.find(query,options);
             const reviews = await cursor.toArray();
             res.send(reviews)
         })
